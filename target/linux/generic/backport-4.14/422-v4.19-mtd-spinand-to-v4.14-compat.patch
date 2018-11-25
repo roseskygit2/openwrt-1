@@ -1,0 +1,53 @@
+--- a/drivers/mtd/nand/spi/core.c
++++ b/drivers/mtd/nand/spi/core.c
+@@ -628,6 +628,32 @@ static int spinand_mtd_write(struct mtd_
+ 	return ret;
+ }
+ 
++static int spinand_mtd_read_wrapper(struct mtd_info *mtd, loff_t from, size_t len,
++	     size_t *retlen, u_char *buf)
++{
++	int ret_code;
++	struct mtd_oob_ops ops = {
++		.len = len,
++		.datbuf = buf,
++	};
++	ret_code = mtd->_read_oob(mtd, from, &ops);
++	*retlen = ops.retlen;
++	return ret_code;
++}
++
++int spinand_mtd_write_wrapper(struct mtd_info *mtd, loff_t to, size_t len,
++	      size_t *retlen, const u_char *buf)
++{
++	struct mtd_oob_ops ops = {
++		.len = len,
++		.datbuf = (u8 *)buf,
++	};
++	int ret;
++	ret = mtd->_write_oob(mtd, to, &ops);
++	*retlen = ops.retlen;
++	return ret;
++}
++
+ static bool spinand_isbad(struct nand_device *nand, const struct nand_pos *pos)
+ {
+ 	struct spinand_device *spinand = nand_to_spinand(nand);
+@@ -739,6 +765,8 @@ static int spinand_mtd_erase(struct mtd_
+ 	ret = nanddev_mtd_erase(mtd, einfo);
+ 	mutex_unlock(&spinand->lock);
+ 
++	einfo->state = ret ? MTD_ERASE_FAILED : MTD_ERASE_DONE;
++	mtd_erase_callback(einfo);
+ 	return ret;
+ }
+ 
+@@ -1037,6 +1065,8 @@ static int spinand_init(struct spinand_d
+ 	mtd->_block_markbad = spinand_mtd_block_markbad;
+ 	mtd->_block_isreserved = spinand_mtd_block_isreserved;
+ 	mtd->_erase = spinand_mtd_erase;
++	mtd->_read = spinand_mtd_read_wrapper;
++	mtd->_write = spinand_mtd_write_wrapper;
+ 
+ 	if (spinand->eccinfo.ooblayout)
+ 		mtd_set_ooblayout(mtd, spinand->eccinfo.ooblayout);
