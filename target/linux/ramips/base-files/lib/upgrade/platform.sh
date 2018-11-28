@@ -73,7 +73,6 @@ platform_check_image() {
 	gl-mt750|\
 	gl-mt300n-v2|\
 	hc5*61|\
-	hc5661a|\
 	hg255d|\
 	hiwifi,hc5861b|\
 	hlk-rm04|\
@@ -308,6 +307,7 @@ platform_check_image() {
 		return 0
 		;;
 	hc5962|\
+	hiwifi,hc5661a-nand|\
 	mir3g|\
 	r6220|\
 	ubnt-erx|\
@@ -365,6 +365,7 @@ platform_do_upgrade() {
 
 	case "$board" in
 	hc5962|\
+	hiwifi,hc5661a-nand|\
 	mir3g|\
 	r6220|\
 	ubnt-erx|\

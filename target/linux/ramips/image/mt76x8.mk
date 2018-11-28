@@ -68,6 +68,17 @@ define Device/hc5661a
 endef
 TARGET_DEVICES += hc5661a
 
+define Device/hiwifi_hc5661a-nand
+  DTS := HC5661A_NAND
+  BOARD_NAME := hiwifi,hc5661a-nand
+  #Actually no scripts really checked the image size...
+  IMAGE_SIZE := $(ralink_default_fw_size_16M)
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEVICE_TITLE := HiWiFi HC5661A with SPI NAND
+  DEVICE_PACKAGES := kmod-sdhci-mt7620
+endef
+TARGET_DEVICES += hiwifi_hc5661a-nand
+
 define Device/hiwifi_hc5861b
   DTS := HC5861B
   IMAGE_SIZE := 15808k

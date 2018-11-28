@@ -93,6 +93,7 @@ ramips_setup_interfaces()
 	firewrt|\
 	hc5661a|\
 	hc5962|\
+	hiwifi,hc5661a-nand|\
 	hlk-rm04|\
 	k2p|\
 	kn|\
