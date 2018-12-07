@@ -1,20 +1,55 @@
-From b6b0bc620f5f9fa8c92a1b7faaa22e35a79ab69c Mon Sep 17 00:00:00 2001
+From fb238f168586eff47022c3eaf061ce5ae1404802 Mon Sep 17 00:00:00 2001
 From: Chuanhong Guo <gch981213@gmail.com>
 Date: Tue, 27 Nov 2018 12:50:13 +0800
-Subject: [PATCH 110/111] spi: spi-mt7621: drop the broken full-duplex mode
+Subject: [PATCH v3 1/2] staging: mt7621-spi: drop the broken full-duplex mode
 
-Under MORE_BUF_MODE the controller will always shift one bit out of
-spi_opcode if (mosi_bit_cnt > 0) && (cmd_bit_cnt == 0) so the full-
-duplex mode is broken since we can't read anything from MISO during
-writing spi_opcode.
+According to John Crispin (aka blogic) on IRC on Nov 26 2018:
+  so basically i made cs1 work for MTK/labs when i built
+  the linkit smart for them. the req-sheet said that cs1 should be proper
+  duplex spi. however ....
+   1) the core will always send 1 byte before any transfer, this is the
+      m25p80 command.
+   2) mode 3 is broken and bit reversed (?)
+   3) some bit are incorrectly wired in hw for mode2/3
+  we wrote a test script and test for [0-0xffff] on all modes and certain
+  bits are swizzled under certain conditions and it was not possible to
+  fix this even using a hack.
+  we then decided to use spi-gpio and i never removed the errornous code
+  basically the spi is fecked for anything but half duplex spi mode0
+  running a sflash on it
+
+The controller will always send some data from OPCODE register under half
+duplex mode before starting a full-duplex transfer, so the full-duplex
+mode is broken.
+This piece of code also make CS1 unavailable since it forces the
+broken full-duplex mode to be used on CS1.
 
 Signed-off-by: Chuanhong Guo <gch981213@gmail.com>
 ---
- drivers/spi/spi-mt7621.c | 120 +++++----------------------------------
- 1 file changed, 15 insertions(+), 105 deletions(-)
+Change since v2:
+ fixed the following checkpatch.pl complaining:
+ERROR: space required before the open parenthesis '('
+#82: FILE: drivers/staging/mt7621-spi/spi-mt7621.c:284:
++		if((t->rx_buf) && (t->tx_buf)) {
 
-diff --git a/drivers/spi/spi-mt7621.c b/drivers/spi/spi-mt7621.c
-index d045b556..8af6f307 100644
+CHECK: braces {} should be used on all arms of this statement
+#82: FILE: drivers/staging/mt7621-spi/spi-mt7621.c:284:
++		if((t->rx_buf) && (t->tx_buf)) {
+[...]
++		} else if (t->rx_buf)
+[...]
+ 		else if (t->tx_buf)
+[...]
+
+Changes since v1:
+ Quoted John's reply in commit message
+ slightly modified code comment
+
+ drivers/staging/mt7621-spi/spi-mt7621.c | 123 ++++--------------------
+ 1 file changed, 17 insertions(+), 106 deletions(-)
+
+diff --git a/drivers/staging/mt7621-spi/spi-mt7621.c b/drivers/staging/mt7621-spi/spi-mt7621.c
+index d045b5568e0f..a69293d43281 100644
 --- a/drivers/spi/spi-mt7621.c
 +++ b/drivers/spi/spi-mt7621.c
 @@ -86,16 +86,13 @@ static inline void mt7621_spi_write(struct mt7621_spi *rs, u32 reg, u32 val)
@@ -54,13 +89,13 @@ index d045b556..8af6f307 100644
  					   struct spi_message *m)
  {
  	struct mt7621_spi *rs = spi_master_get_devdata(master);
-@@ -284,7 +281,16 @@ static int mt7621_spi_transfer_half_duplex(struct spi_master *master,
+@@ -284,10 +281,20 @@ static int mt7621_spi_transfer_half_duplex(struct spi_master *master,
  	mt7621_spi_set_cs(spi, 1);
  	m->actual_length = 0;
  	list_for_each_entry(t, &m->transfers, transfer_list) {
 -		if (t->rx_buf)
-+		if((t->rx_buf) && (t->tx_buf)) {
-+			/* This controller will shift one extra bit out
++		if ((t->rx_buf) && (t->tx_buf)) {
++			/* This controller will shift some extra data out
 +			 * of spi_opcode if (mosi_bit_cnt > 0) &&
 +			 * (cmd_bit_cnt == 0). So the claimed full-duplex
 +			 * support is broken since we have no way to read
@@ -68,11 +103,16 @@ index d045b556..8af6f307 100644
 +			 */
 +			status = -EIO;
 +			goto msg_done;
-+		} else if (t->rx_buf)
++		} else if (t->rx_buf) {
  			mt7621_spi_read_half_duplex(rs, t->len, t->rx_buf);
- 		else if (t->tx_buf)
+-		else if (t->tx_buf)
++		} else if (t->tx_buf) {
  			mt7621_spi_write_half_duplex(rs, t->len, t->tx_buf);
-@@ -300,102 +306,6 @@ static int mt7621_spi_transfer_half_duplex(struct spi_master *master,
++		}
+ 		m->actual_length += t->len;
+ 	}
+ 	mt7621_spi_flush(rs);
+@@ -300,102 +307,6 @@ static int mt7621_spi_transfer_half_duplex(struct spi_master *master,
  	return 0;
  }
  
@@ -175,7 +215,7 @@ index d045b556..8af6f307 100644
  static int mt7621_spi_setup(struct spi_device *spi)
  {
  	struct mt7621_spi *rs = spidev_to_mt7621_spi(spi);
-@@ -478,7 +388,7 @@ static int mt7621_spi_probe(struct platform_device *pdev)
+@@ -478,7 +389,7 @@ static int mt7621_spi_probe(struct platform_device *pdev)
  
  	device_reset(&pdev->dev);
  
