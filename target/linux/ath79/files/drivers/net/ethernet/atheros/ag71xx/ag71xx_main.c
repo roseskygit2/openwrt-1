@@ -1307,7 +1307,6 @@ static const struct net_device_ops ag71xx_netdev_ops = {
 static int ag71xx_probe(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
-	struct device_node *mdio_node;
 	struct net_device *dev;
 	struct resource *res;
 	struct ag71xx *ag;
@@ -1485,10 +1484,11 @@ static int ag71xx_probe(struct platform_device *pdev)
 	ag71xx_wr(ag, AG71XX_REG_MAC_CFG1, 0);
 	ag71xx_hw_init(ag);
 
-	if(!of_device_is_compatible(np, "simple-mfd")) {
-		mdio_node = of_get_child_by_name(np, "mdio-bus");
-		if(!IS_ERR(mdio_node))
-			of_platform_device_create(mdio_node, NULL, NULL);
+	/* probe mdio-bus if it isn't populated by using "simple-mfd" */
+	if (!of_node_check_flag(np, OF_POPULATED_BUS)) {
+		err = of_platform_populate(np, NULL, NULL, &pdev->dev);
+		if (err)
+			return err;
 	}
 
 	err = ag71xx_phy_connect(ag);
