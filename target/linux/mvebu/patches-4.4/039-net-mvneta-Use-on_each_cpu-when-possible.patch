@@ -14,7 +14,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
 
 --- a/drivers/net/ethernet/marvell/mvneta.c
 +++ b/drivers/net/ethernet/marvell/mvneta.c
-@@ -2557,7 +2557,7 @@ static void mvneta_percpu_mask_interrupt
+@@ -2558,7 +2558,7 @@ static void mvneta_percpu_mask_interrupt
  
  static void mvneta_start_dev(struct mvneta_port *pp)
  {
@@ -23,7 +23,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  
  	mvneta_max_rx_size_set(pp, pp->pkt_size);
  	mvneta_txq_max_tx_size_set(pp, pp->pkt_size);
-@@ -2573,9 +2573,8 @@ static void mvneta_start_dev(struct mvne
+@@ -2574,9 +2574,8 @@ static void mvneta_start_dev(struct mvne
  	}
  
  	/* Unmask interrupts. It has to be done from each CPU */

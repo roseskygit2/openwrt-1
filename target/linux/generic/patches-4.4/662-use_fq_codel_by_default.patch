@@ -51,7 +51,7 @@
  EXPORT_SYMBOL(default_qdisc_ops);
  
  /* Main transmission queue. */
-@@ -731,7 +731,7 @@ static void attach_one_default_qdisc(str
+@@ -735,7 +735,7 @@ static void attach_one_default_qdisc(str
  				     void *_unused)
  {
  	struct Qdisc *qdisc;
@@ -84,7 +84,7 @@
  		if (!qdisc)
 --- a/net/sched/sch_api.c
 +++ b/net/sched/sch_api.c
-@@ -1951,7 +1951,7 @@ static int __init pktsched_init(void)
+@@ -1950,7 +1950,7 @@ static int __init pktsched_init(void)
  		return err;
  	}
  

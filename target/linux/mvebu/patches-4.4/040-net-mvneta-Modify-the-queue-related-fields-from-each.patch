@@ -17,7 +17,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
 
 --- a/drivers/net/ethernet/marvell/mvneta.c
 +++ b/drivers/net/ethernet/marvell/mvneta.c
-@@ -1040,6 +1040,43 @@ static void mvneta_set_autoneg(struct mv
+@@ -1041,6 +1041,43 @@ static void mvneta_set_autoneg(struct mv
  	}
  }
  
@@ -61,7 +61,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  /* This method sets defaults to the NETA port:
   *	Clears interrupt Cause and Mask registers.
   *	Clears all MAC tables.
-@@ -1057,14 +1094,10 @@ static void mvneta_defaults_set(struct m
+@@ -1058,14 +1095,10 @@ static void mvneta_defaults_set(struct m
  	int max_cpu = num_present_cpus();
  
  	/* Clear all Cause registers */
@@ -78,7 +78,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  	mvreg_write(pp, MVNETA_INTR_ENABLE, 0);
  
  	/* Enable MBUS Retry bit16 */
-@@ -2530,31 +2563,6 @@ static int mvneta_setup_txqs(struct mvne
+@@ -2531,31 +2564,6 @@ static int mvneta_setup_txqs(struct mvne
  	return 0;
  }
  
@@ -110,7 +110,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  static void mvneta_start_dev(struct mvneta_port *pp)
  {
  	int cpu;
-@@ -2605,13 +2613,10 @@ static void mvneta_stop_dev(struct mvnet
+@@ -2606,13 +2614,10 @@ static void mvneta_stop_dev(struct mvnet
  	mvneta_port_disable(pp);
  
  	/* Clear all ethernet port interrupts */
